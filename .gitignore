@@ -1,0 +1,10 @@
+# Environments
+venv/
+.venv/
+
+# Python compiled bytecode
+__pycache__/
+*.pyc
+
+# Generated data output
+data/
