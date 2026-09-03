@@ -19,7 +19,6 @@ def run_simulation_pipeline():
     print("==========================================")
     settlement_gen = ExpectedSettlementGenerator()
     expected_settlements = settlement_gen.settlement_management(
-        fee_charge=0.02, 
         payments=payments
     )
     print(f"-> Generated {len(expected_settlements)} expected batch settlements.\n")

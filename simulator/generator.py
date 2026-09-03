@@ -1,7 +1,7 @@
 import uuid
 from faker import Faker
 import random
-from datetime import datetime
+from datetime import datetime,timedelta
 import csv
 import os
 from config import PAYMENT_DATA_PATH
@@ -14,12 +14,13 @@ class Generator:
         self.orders=[]
         self.payments=[]
         self.payment_status=["SUCCESS","FAILED","TIMEOUT"]
+        self.base_time=datetime.now()-timedelta(day=7)
 
     def create_merchant(self,count:int):
 
         for _ in range(count):
 
-            merchant_name=self.fake.name()
+            merchant_name=self.fake.company()
             merchant_id=str(uuid.uuid4())
 
             self.merchants.append({
@@ -55,6 +56,9 @@ class Generator:
             customer=random.choice(self.customers)
             merchant=random.choice(self.merchants)
 
+            random_minutes_offset = random.randint(1, 10000)
+            order_time = self.base_time + timedelta(minutes=random_minutes_offset)
+
             data={
                 'order_id':order_id,
 
@@ -66,7 +70,7 @@ class Generator:
 
                 'amount':amount,
 
-                'order_created_at':datetime.now()
+                'order_created_at':order_time,
                 }
             self.orders.append(data)
         return self.orders
@@ -83,11 +87,14 @@ class Generator:
                 k=1
             )[0]
 
+            payment_time = order['order_created_at'] + timedelta(seconds=random.randint(5, 120))
+
             data={
                 **order,
                 'payment_id':payment_id,
                 'payment_status':payment_status,
-                'payment_created_at':datetime.now()
+                'payment_created_at':payment_time,
+                'payment_updated_at':payment_time+timedelta(seconds=2)
             }
 
             self.payments.append(data)

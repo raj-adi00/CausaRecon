@@ -1,9 +1,10 @@
 import uuid
 import csv
 import os
-from datetime import datetime
+import json
+from datetime import datetime,timedelta
 from collections import defaultdict
-from config import EXPECTED_SETTLEMENT_PATH
+from config import EXPECTED_SETTLEMENT_PATH, DEFAULT_FEE_CHARGE
 
 class ExpectedSettlementGenerator:
     def __init__(self):
@@ -25,8 +26,8 @@ class ExpectedSettlementGenerator:
 
         for payment in self.successful_payments:
 
-            payment['platform_fee']=fee_charge*payment['amount']
-            payment['final_settlement']=payment['amount']-payment['platform_fee']
+            payment['platform_fee']=round(fee_charge*payment['amount'],2)
+            payment['final_settlement']=round(payment['amount']-payment['platform_fee'],2)
         
         return self.successful_payments
     
@@ -41,6 +42,9 @@ class ExpectedSettlementGenerator:
 
         for merchant_id,payments in merchant_payments.items():
 
+            last_payment_time = max([p['payment_updated_at'] for p in payments])
+            settlement_time = last_payment_time + timedelta(hours=2)
+
             gross_amout=sum(
                 payment['amount'] for payment in payments
             )
@@ -53,6 +57,11 @@ class ExpectedSettlementGenerator:
                 payment['final_settlement'] for payment in payments
             )
 
+            constituent_payments=[
+                {'payment_id':p['payment_id'],'net_amount':p['final_settlement']}
+                for p in payments
+            ]
+
             settlement={
                 'settlement_id': str(uuid.uuid4()),
                 'merchant_id': merchant_id,
@@ -63,12 +72,13 @@ class ExpectedSettlementGenerator:
 
                 'payment_count':len(payments),
 
-                'payment_ids':[
-                    payment['payment_id'] for payment in payments
-                ],
+                'payment_ids':json.dumps(
+                    [p['payment_id'] for p in payments]
+                ),
+                'constituent_payments_raw': json.dumps(constituent_payments),
 
                 'settlement_status':'CREATED',
-                'settlement_created_at':datetime.now()
+                'settlement_created_at':settlement_time
             }
 
             self.expected_settlements.append(settlement)
@@ -96,10 +106,10 @@ class ExpectedSettlementGenerator:
         print(f"Expected Settlement Data saved successfullly to {file_path}")
 
 
-    def settlement_management(self,fee_charge,payments):
+    def settlement_management(self,payments):
 
         self.filter_payments(payments=payments)
-        self.calculate_fee(fee_charge=fee_charge)
+        self.calculate_fee(fee_charge=DEFAULT_FEE_CHARGE)
         self.create_batch_settlements()
         self.save_to_csv()
         return self.expected_settlements

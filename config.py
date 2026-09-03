@@ -12,6 +12,8 @@ OBSERVED_SETTLEMENT_PATH = os.path.join(DATA_DIR, "observed_settlements.csv")
 GROUND_TRUTH_PATH = os.path.join(DATA_DIR, "ground_truth.csv")
 RECONCILIATION_REPORT_PATH = os.path.join(DATA_DIR, "reconciliation_report.csv")
 DISCREPANCIES_REPORT_PATH = os.path.join(DATA_DIR, "discrepancies_report.csv")
+EVENT_LOGS_PATH = os.path.join(DATA_DIR, "event_logs.csv")
+RECONCILIATION_CASES_PATH = os.path.join(DATA_DIR, "reconciliation_cases.csv")
 
 # Simulation Parameters
 DEFAULT_FEE_CHARGE = 0.02
