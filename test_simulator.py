@@ -1,6 +1,6 @@
-from generator import Generator
-from expected_settlement import ExpectedSettlementGenerator
-from settlement_executor import SettlementExecutor
+from simulator.generator import Generator
+from simulator.expected_settlement import ExpectedSettlementGenerator
+from simulator.settlement_executor import SettlementExecutor
 
 def run_simulation_pipeline():
     print("==========================================")

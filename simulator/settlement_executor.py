@@ -4,7 +4,7 @@ import csv
 import os
 from datetime import datetime, timedelta
 from collections import Counter
-
+from config import OBSERVED_SETTLEMENT_PATH, GROUND_TRUTH_PATH
 
 class SettlementExecutor:
 
@@ -295,17 +295,14 @@ class SettlementExecutor:
     def save_to_csv(
         self,
         data,
-        filename="observed_settlements.csv",
-        folder="data",
+        file_path
     ):
 
         if not data:
             print("No observed settlement data found")
             return
 
-        os.makedirs(folder, exist_ok=True)
-
-        file_path = os.path.join(folder, filename)
+        os.makedirs(os.path.dirname(file_path),exist_ok=True)
 
         fieldnames = data[0].keys()
 
@@ -345,14 +342,12 @@ class SettlementExecutor:
 
         self.save_to_csv(
             data=self.observed_bank_transactions,
-            filename="observed_settlements.csv",
-            folder="data",
+            file_path=OBSERVED_SETTLEMENT_PATH
         )
 
         self.save_to_csv(
             data=self.ground_truth,
-            filename="ground_truth.csv",
-            folder="data"
+            file_path=GROUND_TRUTH_PATH
         )
 
         return self.observed_bank_transactions

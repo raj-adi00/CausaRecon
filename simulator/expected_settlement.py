@@ -3,6 +3,7 @@ import csv
 import os
 from datetime import datetime
 from collections import defaultdict
+from config import EXPECTED_SETTLEMENT_PATH
 
 class ExpectedSettlementGenerator:
     def __init__(self):
@@ -74,14 +75,15 @@ class ExpectedSettlementGenerator:
         return self.expected_settlements
     
 
-    def save_to_csv(self,filename="expected_settlement.csv",folder="data"):
+    def save_to_csv(self):
 
         if not self.expected_settlements:
             print("No Payment Data FOund")
             return
         
-        os.makedirs(folder,exist_ok=True)
-        file_path=os.path.join(folder,filename)
+        file_path=EXPECTED_SETTLEMENT_PATH
+
+        os.makedirs(os.path.dirname(file_path),exist_ok=True)
         
         fieldnames=self.expected_settlements[0].keys()
 

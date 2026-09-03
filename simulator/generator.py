@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 import csv
 import os
+from config import PAYMENT_DATA_PATH
 
 class Generator:
     def __init__(self):
@@ -94,14 +95,15 @@ class Generator:
         return self.payments
     
 
-    def save_to_csv(self,filename="payment_data.csv",folder="data"):
+    def save_to_csv(self):
 
         if not self.payments:
             print("No Payment Data FOund")
             return
         
-        os.makedirs(folder,exist_ok=True)
-        file_path=os.path.join(folder,filename)
+        file_path=PAYMENT_DATA_PATH
+
+        os.makedirs(os.path.dirname(file_path),exist_ok=True)
         
         fieldnames=self.payments[0].keys()
 
