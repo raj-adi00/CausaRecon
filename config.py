@@ -14,6 +14,7 @@ RECONCILIATION_REPORT_PATH = os.path.join(DATA_DIR, "reconciliation_report.csv")
 DISCREPANCIES_REPORT_PATH = os.path.join(DATA_DIR, "discrepancies_report.csv")
 EVENT_LOGS_PATH = os.path.join(DATA_DIR, "event_logs.csv")
 RECONCILIATION_CASES_PATH = os.path.join(DATA_DIR, "reconciliation_cases.csv")
+INVESTIGATION_REPORTS_DIR = os.path.join(DATA_DIR, "investigation_reports")
 
 # Simulation Parameters
 DEFAULT_FEE_CHARGE = 0.02

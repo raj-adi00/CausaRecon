@@ -88,10 +88,34 @@ class InvestigationTools:
         Gathers all deterministic evidence for a specific settlement.
         This dictionary becomes the exact JSON payload passed to Node A (The LLM).
         """
+        expected = self.get_expected_settlement(settlement_id)
+        observed = self.get_observed_transactions(settlement_id)
+        raw_payments = self.get_related_payments(settlement_id)
+        logs = self.get_event_logs(settlement_id)
+
+        if expected:
+            expected.pop('constituent_payments_raw',None)
+            expected.pop('payment_ids',None)
+
+        # Slim down related payments to just essential fields to prevent token bloat
+        slim_payments = [
+            {
+                'payment_id': p.get('payment_id'),
+                'order_created_at':p.get('order_created_at'),
+                'payment_created_at':p.get('payment_created_at'),
+                'payment_updated_at':p.get('payment_updated_at'),
+                'amount': p.get('amount'),
+                'status': p.get('payment_status')
+            }
+            for p in raw_payments
+        ]
+
         data = {
-            'expected_settlement': self.get_expected_settlement(settlement_id=settlement_id),
-            'observed_transactions': self.get_observed_transactions(settlement_id=settlement_id),
-            'related_payments': self.get_related_payments(settlement_id=settlement_id),
-            'event_logs': self.get_event_logs(settlement_id=settlement_id)
+            'expected_settlement': [expected] if expected else [],
+            'observed_transactions': observed,
+            'related_payments': slim_payments,
+            'event_logs': logs
         }
+
+        # print(f"Evidence bundle for {settlement_id}:{data}")
         return data

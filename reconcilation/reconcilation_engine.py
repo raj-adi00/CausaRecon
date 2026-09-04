@@ -43,7 +43,9 @@ class ReconciliationEngine:
             return None
 
         # Group observed settlement by settlement_id
-        df_observed_grouped = df_observed[['settlement_id', 'amount']].groupby('settlement_id', as_index=False).sum()
+        successful_observed = df_observed[df_observed['transaction_status'] == 'SUCCESS']
+
+        df_observed_grouped = successful_observed[['settlement_id', 'amount']].groupby('settlement_id', as_index=False).sum()
 
         df_observed_count = (
             df_observed

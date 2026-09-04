@@ -14,7 +14,7 @@ class Generator:
         self.orders=[]
         self.payments=[]
         self.payment_status=["SUCCESS","FAILED","TIMEOUT"]
-        self.base_time=datetime.now()-timedelta(day=7)
+        self.base_time=datetime.now()-timedelta(days=7)
 
     def create_merchant(self,count:int):
 

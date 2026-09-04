@@ -22,7 +22,7 @@ class ExpectedSettlementGenerator:
         return self.successful_payments
     
 
-    def calculate_fee(self,fee_charge=0.02):
+    def calculate_fee(self,fee_charge=DEFAULT_FEE_CHARGE):
 
         for payment in self.successful_payments:
 
@@ -106,10 +106,10 @@ class ExpectedSettlementGenerator:
         print(f"Expected Settlement Data saved successfullly to {file_path}")
 
 
-    def settlement_management(self,payments):
+    def settlement_management(self,payments,fee_charge=DEFAULT_FEE_CHARGE):
 
         self.filter_payments(payments=payments)
-        self.calculate_fee(fee_charge=DEFAULT_FEE_CHARGE)
+        self.calculate_fee(fee_charge=fee_charge)
         self.create_batch_settlements()
         self.save_to_csv()
         return self.expected_settlements

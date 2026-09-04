@@ -18,13 +18,12 @@ class SettlementExecutor:
             self.correct_bank_transactions.append(settlement)
         return self.correct_bank_transactions
 
-    def log_event(self, settlement_id, entity_id, entity_type, event_type, timestamp, details=""):
+    def log_event(self, settlement_id, txn_id, entity_type, timestamp, details=""):
         self.event_logs.append({
             'log_id': str(uuid.uuid4()),
             'settlement_id': settlement_id,
-            'entity_id': entity_id,
+            'txn_id': txn_id,
             'entity_type': entity_type,
-            'event_type': event_type,
             'timestamp': timestamp,
             'details': details
         })
@@ -62,11 +61,10 @@ class SettlementExecutor:
         reversal_time = settlement['settlement_created_at'] + timedelta(hours=1)
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=reversed_payment['payment_id'],
+            txn_id=txn_id,
             entity_type='PAYMENT',
-            event_type='PAYMENT_REVERSED',
             timestamp=reversal_time,
-            details=f"Customer chargeback received. Amount reversed: {reversed_payment['net_amount']}"
+            details=f"Customer chargeback received for txn: {reversed_payment['payment_id']}. Amount reversed: {reversed_payment['net_amount']}."
         )
 
         return [{
@@ -87,11 +85,10 @@ class SettlementExecutor:
         
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=attempted_txn_id,
+            txn_id=attempted_txn_id,
             entity_type='BANK_TRANSACTION',
-            event_type='GATEWAY_TIMEOUT',
             timestamp=fail_time,
-            details="No response from core banking system during batch dispatch."
+            details="No response from core banking system during batch dispatch. Failed to dispatch money to merchant"
         )
         return []
 
@@ -105,11 +102,18 @@ class SettlementExecutor:
         
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=settlement['settlement_id'],
+            txn_id=txn_id_1,
             entity_type='SETTLEMENT',
-            event_type='RETRY_WORKER_ERROR',
             timestamp=txn_time - timedelta(minutes=5),
-            details=f"Orphaned cron job restarted. Resulted in duplicate transactions: {txn_id_1} and {txn_id_2}."
+            details=f"Transaction successful with {txn_id_1} to merchant"
+        )
+
+        self.log_event(
+            settlement_id=settlement['settlement_id'],
+            txn_id=txn_id_2,
+            entity_type='SETTLEMENT',
+            timestamp=txn_time - timedelta(minutes=5),
+            details=f"Transaction successful with {txn_id_2} to merchant"       
         )
 
         return [
@@ -140,9 +144,8 @@ class SettlementExecutor:
         
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=txn_id,
+            txn_id=txn_id,
             entity_type='BANK_TRANSACTION',
-            event_type='BENEFICIARY_ACCOUNT_INVALID',
             timestamp=txn_time,
             details="Bank rejected transfer. Merchant account marked as frozen or invalid."
         )
@@ -170,11 +173,18 @@ class SettlementExecutor:
 
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=settlement['settlement_id'],
+            txn_id=txn_id_1,
             entity_type='SETTLEMENT',
-            event_type='TRANCHE_SPLIT_TRIGGERED',
             timestamp=txn_time - timedelta(minutes=10),
-            details=f"Amount exceeded single-transfer routing limits. Split into tranches: {txn_id_1} and {txn_id_2}."
+            details=f"{first_amount} sent to merchant via {txn_id_1}"
+        )
+
+        self.log_event(
+            settlement_id=settlement['settlement_id'],
+            txn_id=txn_id_2,
+            entity_type='SETTLEMENT',
+            timestamp=txn_time - timedelta(minutes=10),
+            details=f"{second_amount} sent to merchant via {txn_id_2}"
         )
 
         return [
@@ -207,11 +217,10 @@ class SettlementExecutor:
 
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=txn_id,
-            entity_type='BANK_TRANSACTION',
-            event_type='CLEARING_NETWORK_DELAY',
+            txn_id=txn_id,
+            entity_type='BANK_TRANSACTION_DELAY',
             timestamp=expected_time + timedelta(hours=1),
-            details="Bank network holiday or outage. Transfer queued for next business day."
+            details=f"Bank network holiday or outage. Transfer queued for next business day. Expected time is {expected_time}"
         )
 
         return [{
@@ -234,11 +243,10 @@ class SettlementExecutor:
 
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=settlement['settlement_id'],
+            txn_id=txn_id,
             entity_type='SETTLEMENT',
-            event_type='MANUAL_CREDIT_ADJUSTMENT',
             timestamp=txn_time - timedelta(hours=2),
-            details=f"Manual operations credit of {extra_amount} applied prior to dispatch."
+            details=f"{total_amount} dispatched to merchant."
         )
 
         return [{
@@ -268,11 +276,10 @@ class SettlementExecutor:
         refund_time = settlement['settlement_created_at'] + timedelta(hours=2)
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=refunded_payment['payment_id'],
+            txn_id=txn_id,
             entity_type='PAYMENT',
-            event_type='MERCHANT_INITIATED_REFUND',
             timestamp=refund_time,
-            details=f"Merchant approved refund via dashboard. Amount deducted from active settlement: {refunded_payment['net_amount']}"
+            details=f"Merchant approved refund of txn: {refunded_payment['payment_id']} via dashboard. Amount deducted from active settlement: {refunded_payment['net_amount']}. Processing remaining settlements"
         )
 
         return [{
@@ -296,9 +303,8 @@ class SettlementExecutor:
 
         self.log_event(
             settlement_id=settlement['settlement_id'],
-            entity_id=settlement['settlement_id'],
+            txn_id=txn_id,
             entity_type='SETTLEMENT',
-            event_type='SYSTEM_FEE_ADJUSTMENT',
             timestamp=txn_time - timedelta(hours=1),
             details=f"Late cross-border/tax fee evaluation prior to dispatch. Additional deduction: {extra_fee}"
         )
