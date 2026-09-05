@@ -98,11 +98,11 @@ class ReconciliationEngine:
         # ==========================================
         # AGENT ENVIRONMENT TRIGGER (NEW)
         # ==========================================
-        self.generate_agent_cases(df_mismatch, cases_data_path)
+        self.generate_agent_cases(df_mismatch,df_expected, cases_data_path)
 
         return df_reconciliation
 
-    def generate_agent_cases(self, df_mismatch, cases_data_path):
+    def generate_agent_cases(self, df_mismatch,df_expected, cases_data_path):
         """
         Transforms mismatches into actionable cases for the AI Agent's environment ledger.
         It checks for existing cases to avoid duplicating work on subsequent runs.
@@ -120,13 +120,16 @@ class ReconciliationEngine:
             existing_settlement_ids = set()
 
         new_cases = []
+        settlement_to_merchant = df_expected.set_index('settlement_id')['merchant_id'].to_dict()
         
         for _, row in df_mismatch.iterrows():
-            if row['settlement_id'] not in existing_settlement_ids:
+            settlement_id = row['settlement_id']
+            if settlement_id not in existing_settlement_ids:
                 new_cases.append({
                     'case_id': f"CASE-{str(uuid.uuid4())[:8].upper()}",
                     'settlement_id': row['settlement_id'],
                     'expected_amount': row['expected_amount'],
+                    'merchant_id': settlement_to_merchant.get(settlement_id, 'UNKNOWN_MERCHANT'),
                     'observed_amount': row['observed_amount'],
                     'discrepancy_amount': row['discrepancy_amount'],
                     'case_status': 'PENDING_INVESTIGATION',  # This alerts the Deterministic Shell to route it to Node A

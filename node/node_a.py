@@ -17,6 +17,9 @@ class InvestigationResult(BaseModel):
     adjustment_reasoning: str = Field(
         description="One sentence explaining WHY an adjustment is or isn't needed."
     )
+    requires_physical_cash_movement: bool = Field(
+    description="True if actual bank funds must be wired/recovered. False if it is just an internal ledger or fee adjustment."
+    )
     discrepancy_explained: bool
     evidence_chain: List[str]
     evidence_sufficiency: Literal["SUFFICIENT", "INSUFFICIENT"]
@@ -49,12 +52,23 @@ class NodeA_Investigator:
             "- You MUST explicitly show the mathematical calculation in your report (e.g., 'Expected 5000 - Observed 0 = Gap 5000').\n"
             "- You MUST explicitly cite the exact UUIDs (payment_id, txn_id, or log_id) of the problematic entities.\n"
             "- Only declare evidence as 'INSUFFICIENT' if the mathematical gap is genuinely untraceable.\n"
+            "Strict Field Definitions & Guidelines (You MUST follow these for every key):\n"
+            "- **'observations'**: Array of strings. Must explicitly show the math (e.g., 'Expected X - Observed Y = Gap Z') and cite exact UUIDs of anomalies found in logs/payments.\n"
+            "- **'primary_cause'**: String. A professional post-mortem finding describing the root cause of the anomaly.\n"
+            "- **'requires_financial_adjustment'**: Boolean. Set to `true` if a debit, credit, or retry is required to balance the merchant's account. Set to `false` otherwise.\n"
+            "- **'adjustment_reasoning'**: String. Exactly one sentence explaining WHY a financial adjustment is or isn't needed based on the gap.\n"
+            "- **'requires_physical_cash_movement'**: Set to `true` if actual currency must move through banking rails (e.g., a failed bank payout that needs a retry, or a genuine accidental double-wire that requires a bank clawback). Set to `false` if the variance is caused by internal platform fee changes, retroactive tax adjustments, rebates, or ledger-only reclassifications where no bank accounts need to be wired or clawed back."
+            "- **'discrepancy_explained'**: Boolean. Set to `true` if you successfully tracked down the root cause and math, or `false` if you cannot account for the gap.\n"
+            "- **'evidence_chain'**: Array of strings. Step-by-step audit trail showing how you moved from the gap calculation to the exact log/payment UUID.\n"
+            "- **'evidence_sufficiency'**: String. Must be strictly either **'SUFFICIENT'** or **'INSUFFICIENT'**.\n"
+            "- **'missing_data'**: Array of strings. List any data fields or logs that are missing if evidence is 'INSUFFICIENT'. Leave as an empty list `[]` if sufficient.\n\n"
             "You must output a JSON object with EXACTLY these keys:\n"
             "{\n"
             '  "observations": ["Explicit math: Expected X - Observed Y = Gap Z", "Cited exact UUID of anomaly in logs or payments"],\n'
             '  "primary_cause": "Your deduced root cause of the anomaly",\n'
             '  "requires_financial_adjustment": true,\n'
             '  "adjustment_reasoning": "One sentence explaining WHY an adjustment is needed based on the gap.",\n'
+            '  "requires_physical_cash_movement": false,\n'
             '  "discrepancy_explained": true,\n'
             '  "evidence_chain": ["Step 1: Expected [amount] minus Observed [amount] equals [gap]", "Step 2: Log ID [uuid] shows anomaly for Txn/Payment ID [uuid]"],\n'
             '  "evidence_sufficiency": "SUFFICIENT",\n'

@@ -2,7 +2,8 @@ import pandas as pd
 from reconcilation.reconcilation_engine import ReconciliationEngine
 from tools.investigation_tools import InvestigationTools 
 from node.node_a import NodeA_Investigator
-from config import RECONCILIATION_CASES_PATH
+from config import RECONCILIATION_CASES_PATH, EXPECTED_SETTLEMENT_PATH
+from node.node_b import run_node_b
 import json
 
 def run_pipeline():
@@ -24,6 +25,12 @@ def run_pipeline():
         cases_df = pd.read_csv(RECONCILIATION_CASES_PATH)
     except FileNotFoundError:
         print(f"Error: {RECONCILIATION_CASES_PATH} not found. Run main_simulator.py first.")
+        return
+
+    try:
+        settlement_expected = pd.read_csv(EXPECTED_SETTLEMENT_PATH)
+    except:
+        print(f"Failed to read data at path {EXPECTED_SETTLEMENT_PATH}")
         return
 
     pending_mask = cases_df['case_status'] == 'PENDING_INVESTIGATION'
@@ -73,6 +80,8 @@ def run_pipeline():
     print("[Shell] Saving updated case ledger to disk...")
     cases_df.to_csv(RECONCILIATION_CASES_PATH, index=False)
     print("Run complete.")
+
+    run_node_b()
 
 if __name__ == "__main__":
     run_pipeline()
