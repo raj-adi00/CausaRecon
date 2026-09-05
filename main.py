@@ -19,7 +19,7 @@ def run_pipeline():
     print("==================================================")
     
     tools = InvestigationTools()
-    node_a = NodeA_Investigator(model_name="llama3.2")
+    node_a = NodeA_Investigator(model_name="openai/gpt-oss-20b")
 
     try:
         cases_df = pd.read_csv(RECONCILIATION_CASES_PATH)

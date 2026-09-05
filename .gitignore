@@ -8,3 +8,6 @@ __pycache__/
 
 # Generated data output
 data/
+
+#environment 
+.env

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 from openai import OpenAI
 from config import INVESTIGATION_REPORTS_DIR
+from dotenv import load_dotenv
 
 # ==========================================
 # 1. STRICT OUTPUT SCHEMA
@@ -29,11 +30,18 @@ class InvestigationResult(BaseModel):
 # 2. NODE A: EVIDENCE INVESTIGATOR (LOCAL)
 # ==========================================
 class NodeA_Investigator:
-    def __init__(self, model_name: str = "llama3.2"):
-        # Points to your local Arch Linux Ollama instance
+    # def __init__(self, model_name: str = "llama3.2"):
+    #     # Points to your local Arch Linux Ollama instance
+    #     self.client = OpenAI(
+    #         base_url="http://localhost:11434/v1", 
+    #         api_key="ollama" 
+    #     )
+    #     self.model_name = model_name
+    def __init__(self, model_name: str = "openai/gpt-oss-20b"):
+        load_dotenv()
         self.client = OpenAI(
-            base_url="http://localhost:11434/v1", 
-            api_key="ollama" 
+            base_url="https://api.groq.com/openai/v1", 
+            api_key=os.getenv("GROQ_API_KEY")
         )
         self.model_name = model_name
 
@@ -83,6 +91,21 @@ class NodeA_Investigator:
         {json.dumps(evidence_bundle, separators=(',', ':'))}
         """
         
+        # completion = self.client.chat.completions.create(
+        #     model=self.model_name,
+        #     messages=[
+        #         {"role": "system", "content": system_prompt},
+        #         {"role": "user", "content": user_prompt}
+        #     ],
+        #     response_format={"type": "json_object"},
+        #     temperature=0.0,
+        #     extra_body={
+        #         "options": {
+        #             "num_ctx": 8192,
+        #             "num_predict": 512
+        #         }
+        #     }
+        # )
         completion = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -90,13 +113,7 @@ class NodeA_Investigator:
                 {"role": "user", "content": user_prompt}
             ],
             response_format={"type": "json_object"},
-            temperature=0.0,
-            extra_body={
-                "options": {
-                    "num_ctx": 8192,
-                    "num_predict": 512
-                }
-            }
+            temperature=0.0
         )
 
         raw_json_str = completion.choices[0].message.content
